@@ -1,5 +1,8 @@
 # Docker ignore 檔案 - 排除不需要的檔案
 
+# 模型檔案 (將從 GitHub Release 下載)
+models/
+
 # 開發和測試檔案
 *.md
 README*
@@ -54,3 +57,4 @@ docs/
 install_fonts.sh
 deploy_gcp_fonts.md
 test_font_display.py
+check_cloud_run_model.py
