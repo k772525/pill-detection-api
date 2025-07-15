@@ -19,6 +19,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# 從GitHub Release下載模型文件
+RUN mkdir -p models && \
+    curl -L -o models/YOLOv12.pt \
+    "https://github.com/k772525/pill-detection-api/releases/download/v1.0.0/YOLOv12.pt" || \
+    echo "模型下載失敗，請檢查Release中是否有YOLOv12.pt文件"
+
 # 安裝中文字型 (使用 Python 腳本)
 RUN python setup_fonts_gcp.py install
 
