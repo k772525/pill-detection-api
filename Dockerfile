@@ -21,9 +21,16 @@ COPY . .
 
 # 從GitHub Release下載模型文件
 RUN mkdir -p models && \
-    curl -L -o models/YOLOv12.pt \
-    "https://github.com/k772525/pill-detection-api/releases/download/v1.0.0/YOLOv12.pt" || \
-    echo "模型下載失敗，請檢查Release中是否有YOLOv12.pt文件"
+    echo "正在下載模型文件..." && \
+    curl -L -f -o models/YOLOv12.pt \
+    "https://github.com/k772525/pill-detection-api/releases/download/v1.0.0/YOLOv12.pt" && \
+    echo "模型下載成功，文件大小：$(du -h models/YOLOv12.pt)" && \
+    ls -la models/ || \
+    (echo "模型下載失敗，嘗試其他版本..." && \
+     curl -L -f -o models/YOLOv12.pt \
+     "https://github.com/k772525/pill-detection-api/releases/download/v1.0.1/YOLOv12.pt" && \
+     echo "模型下載成功 (v1.0.1)，文件大小：$(du -h models/YOLOv12.pt)" || \
+     echo "所有版本的模型下載都失敗了")
 
 # 安裝中文字型 (使用 Python 腳本)
 RUN python setup_fonts_gcp.py install
