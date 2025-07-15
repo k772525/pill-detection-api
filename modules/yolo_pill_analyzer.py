@@ -20,7 +20,7 @@ except ImportError:
 
 # --- GCS 和模型設定 ---
 GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME")
-MODEL_PATHS = {"YOLOv12.pt": os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "YOLOv12.pt")}
+MODEL_PATHS = {"YOLOv12.pt": "models/YOLOv12.pt"}
 
 loaded_models = {}
 

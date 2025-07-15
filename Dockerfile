@@ -20,18 +20,29 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 從GitHub Release下載模型文件 (在 COPY . . 之前)
 RUN mkdir -p models && \
     echo "正在下載模型文件..." && \
-    curl -L -f -o models/YOLOv12.pt \
-    "https://github.com/k772525/pill-detection-api/releases/download/v1.0.0/YOLOv12.pt" && \
+    curl -L -f --connect-timeout 30 --max-time 300 --retry 3 --retry-delay 5 \
+         -o models/YOLOv12.pt \
+         "https://github.com/k772525/pill-detection-api/releases/download/v1.0.0/YOLOv12.pt" && \
     echo "模型下載成功，文件大小：$(du -h models/YOLOv12.pt)" && \
     ls -la models/ || \
     (echo "模型下載失敗，嘗試其他版本..." && \
-     curl -L -f -o models/YOLOv12.pt \
-     "https://github.com/k772525/pill-detection-api/releases/download/v1.0.1/YOLOv12.pt" && \
+     curl -L -f --connect-timeout 30 --max-time 300 --retry 3 --retry-delay 5 \
+          -o models/YOLOv12.pt \
+          "https://github.com/k772525/pill-detection-api/releases/download/v1.0.1/YOLOv12.pt" && \
      echo "模型下載成功 (v1.0.1)，文件大小：$(du -h models/YOLOv12.pt)" || \
-     echo "所有版本的模型下載都失敗了")
+     (echo "所有版本的模型下載都失敗了" && exit 1))
 
 # 複製應用程式代碼 (不包括本地 models/)
 COPY . .
+
+# 驗證模型文件存在
+RUN ls -la models/ && \
+    if [ -f models/YOLOv12.pt ]; then \
+        echo "✅ 模型文件存在，大小：$(du -h models/YOLOv12.pt)"; \
+    else \
+        echo "❌ 模型文件不存在！"; \
+        exit 1; \
+    fi
 
 # 安裝中文字型 (使用 Python 腳本)
 RUN python setup_fonts_gcp.py install
