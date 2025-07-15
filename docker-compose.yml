@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  pill-detection-api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - PYTHONPATH=/app
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/cji25.json
+    volumes:
+      - ./models:/app/models
+      - ./temp_images:/app/temp_images
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选: 本地MySQL数据库用于开发
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: sql0626
+      MYSQL_DATABASE: pill_test
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    profiles:
+      - dev
+
+volumes:
+  mysql_data:

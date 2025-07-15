@@ -1,0 +1,16 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+Pillow==10.4.0
+numpy==1.26.4
+opencv-python==4.10.0.84
+ultralytics==8.3.156
+torch==2.5.1
+torchvision==0.20.1
+PyMySQL==1.1.0
+python-dotenv==1.1.0
+requests==2.32.4
+google-cloud-storage==2.10.0
+cloud-sql-python-connector==1.4.3
+sqlalchemy==2.0.23
+PyYAML==6.0.1
