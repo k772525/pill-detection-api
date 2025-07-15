@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     fontconfig \
     fonts-noto-cjk \
     wget \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # 預先升級 pip setuptools wheel，避免 numpy/torch 等新版 whl 抓不到
@@ -24,13 +25,7 @@ RUN mkdir -p models && \
          -o models/YOLOv12.pt \
          "https://github.com/k772525/pill-detection-api/releases/download/v1.0.0/YOLOv12.pt" && \
     echo "模型下載成功，文件大小：$(du -h models/YOLOv12.pt)" && \
-    ls -la models/ || \
-    (echo "模型下載失敗，嘗試其他版本..." && \
-     curl -L -f --connect-timeout 30 --max-time 300 --retry 3 --retry-delay 5 \
-          -o models/YOLOv12.pt \
-          "https://github.com/k772525/pill-detection-api/releases/download/v1.0.1/YOLOv12.pt" && \
-     echo "模型下載成功 (v1.0.1)，文件大小：$(du -h models/YOLOv12.pt)" || \
-     (echo "所有版本的模型下載都失敗了" && exit 1))
+    ls -la models/
 
 # 複製應用程式代碼 (不包括本地 models/)
 COPY . .
