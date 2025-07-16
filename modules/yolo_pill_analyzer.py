@@ -70,16 +70,21 @@ def upload_file_to_gcs(local_file_path, bucket_name, object_name=None):
         blob.upload_from_filename(local_file_path)
         logger.info(f"[調試] 文件已上傳到 GCS: {bucket_name}/{object_name}")
         
-        # 生成 V4 Signed URL（有效期 7 天）
-        from datetime import timedelta
-        signed_url = blob.generate_signed_url(
-            version="v4",
-            expiration=timedelta(days=7),
-            method="GET"
-        )
-        
-        logger.info(f"[調試] 已生成 V4 Signed URL，有效期 7 天")
-        return signed_url
+        # 嘗試生成 V4 Signed URL，如果失敗則使用公開 URL
+        try:
+            from datetime import timedelta
+            signed_url = blob.generate_signed_url(
+                version="v4",
+                expiration=timedelta(days=7),
+                method="GET"
+            )
+            logger.info(f"[調試] 已生成 V4 Signed URL，有效期 7 天")
+            return signed_url
+        except Exception as sign_error:
+            logger.warning(f"[調試] Signed URL 生成失敗: {sign_error}")
+            logger.info(f"[調試] 改用公開 URL")
+            public_url = blob.public_url
+            return public_url
         
     except Exception as e:
         logger.error(f"GCS 上傳或 Signed URL 生成時發生錯誤: {e}")
@@ -396,12 +401,11 @@ def create_and_upload_annotated_image(base_image, detections, pills_info_from_db
         predict_image_url = upload_file_to_gcs(local_filepath, GCS_BUCKET_NAME, gcs_object_name)
         
         if predict_image_url:
-            logger.info(f"[調試] GCS 上傳成功，已生成 V4 Signed URL")
-            logger.info(f"[調試] Signed URL 有效期: 7 天")
+            logger.info(f"[調試] GCS 上傳成功，圖片 URL 已生成")
             # 保留本地文件作為備份
             return predict_image_url
         else:
-            logger.warning(f"[調試] GCS 上傳或 Signed URL 生成失敗，返回本地路徑: {local_filepath}")
+            logger.warning(f"[調試] GCS 上傳失敗，返回本地路徑: {local_filepath}")
             return local_filepath  # 返回本地路徑
             
     except Exception as e:
