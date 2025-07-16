@@ -53,7 +53,7 @@ def initialize_models():
 
 
 def upload_file_to_gcs(local_file_path, bucket_name, object_name=None):
-    """將本地檔案上傳到 Google Cloud Storage 儲存桶，並回傳公開存取 URL。"""
+    """將本地檔案上傳到 Google Cloud Storage 儲存桶，並回傳 V4 Signed URL。"""
     if not GCS_AVAILABLE:
         logger.info("[調試] GCS 不可用，跳過上傳")
         return None
@@ -65,11 +65,24 @@ def upload_file_to_gcs(local_file_path, bucket_name, object_name=None):
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(object_name)
+        
+        # 上傳文件
         blob.upload_from_filename(local_file_path)
-        public_url = blob.public_url
-        return public_url
+        logger.info(f"[調試] 文件已上傳到 GCS: {bucket_name}/{object_name}")
+        
+        # 生成 V4 Signed URL（有效期 7 天）
+        from datetime import timedelta
+        signed_url = blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(days=7),
+            method="GET"
+        )
+        
+        logger.info(f"[調試] 已生成 V4 Signed URL，有效期 7 天")
+        return signed_url
+        
     except Exception as e:
-        logger.error(f"GCS 上傳時發生錯誤: {e}")
+        logger.error(f"GCS 上傳或 Signed URL 生成時發生錯誤: {e}")
         return None
 
 def _draw_custom_labels(base_image, detections, pills_info_from_db):
@@ -383,11 +396,12 @@ def create_and_upload_annotated_image(base_image, detections, pills_info_from_db
         predict_image_url = upload_file_to_gcs(local_filepath, GCS_BUCKET_NAME, gcs_object_name)
         
         if predict_image_url:
-            logger.info(f"[調試] GCS 上傳成功: {predict_image_url}")
+            logger.info(f"[調試] GCS 上傳成功，已生成 V4 Signed URL")
+            logger.info(f"[調試] Signed URL 有效期: 7 天")
             # 保留本地文件作為備份
             return predict_image_url
         else:
-            logger.warning(f"[調試] GCS 上傳失敗，返回本地路徑: {local_filepath}")
+            logger.warning(f"[調試] GCS 上傳或 Signed URL 生成失敗，返回本地路徑: {local_filepath}")
             return local_filepath  # 返回本地路徑
             
     except Exception as e:
