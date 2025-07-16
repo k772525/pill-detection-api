@@ -41,8 +41,8 @@ RUN ls -la models/ && \
 
 # 安裝中文字型 (使用 Python 腳本)
 RUN python setup_fonts_gcp.py install
-
-ENV GOOGLE_APPLICATION_CREDENTIALS="/app/cji25.json"
+    
+#ENV GOOGLE_APPLICATION_CREDENTIALS="/app/cji25.json"
 ENV PORT=8080
 ENV PYTHONPATH="/app"
 
