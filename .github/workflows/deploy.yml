@@ -60,10 +60,10 @@ jobs:
             --region ${{ env.REGION }} \
             --allow-unauthenticated \
             --memory 2Gi \
-            --cpu 2 \
+            --cpu 1 \
             --timeout 300 \
             --max-instances 10 \
-            --set-env-vars="GOOGLE_APPLICATION_CREDENTIALS=/app/cji25.json,PYTHONPATH=/app" \
+            --set-env-vars="PYTHONPATH=/app" \
             --format json
 
       - name: Get Service URL
