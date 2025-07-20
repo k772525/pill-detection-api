@@ -23,7 +23,7 @@ RUN mkdir -p models && \
     echo "正在下載模型文件..." && \
     curl -L -f --connect-timeout 30 --max-time 300 --retry 3 --retry-delay 5 \
          -o models/YOLOv12.pt \
-         "https://github.com/k772525/pill-detection-api/releases/download/v1.0.0/YOLOv12.pt" && \
+         "https://github.com/k772525/pill-detection-api/releases/download/v1.1.0/YOLOv12.pt" && \
     echo "模型下載成功，文件大小：$(du -h models/YOLOv12.pt)" && \
     ls -la models/
 
