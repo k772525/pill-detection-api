@@ -63,7 +63,7 @@ jobs:
             --cpu 1 \
             --timeout 300 \
             --max-instances 10 \
-            --set-env-vars="PYTHONPATH=/app" \
+            --set-env-vars="PYTHONPATH=/app,DB_USER=${{ secrets.DB_USER }},DB_PASS=${{ secrets.DB_PASS }},DB_NAME=${{ secrets.DB_NAME }},CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }},GCS_BUCKET_NAME=${{ secrets.GCS_BUCKET_NAME }}" \
             --format json
 
       - name: Get Service URL
