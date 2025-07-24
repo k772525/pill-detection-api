@@ -128,13 +128,12 @@ api_client.py
 api.py
 test_real_image.py
 tmp_rovodev_direct_test.py
-tmp_rovodev_check_model_update.py
 
 # Sensitive files
 cji25.json
 *.pem
 *.key
-env.yaml
+
 # Large model files (will be in releases)
 models/*.pt
 models/*.onnx
