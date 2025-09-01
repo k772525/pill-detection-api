@@ -9,7 +9,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GAR_LOCATION: us-central1
-  SERVICE: yolo12_0901
+  SERVICE: yolo12-0901
   REGION: us-central1
 
 jobs:
