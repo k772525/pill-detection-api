@@ -44,7 +44,11 @@ jobs:
           gcloud artifacts repositories create ${{ env.SERVICE }} \
             --repository-format=docker \
             --location=${{ env.GAR_LOCATION }} \
-            --description="Docker repository for ${{ env.SERVICE }}" || true
+            --description="Docker repository for ${{ env.SERVICE }}" || echo "Repository may already exist"
+          
+          # 驗證儲存庫是否存在
+          gcloud artifacts repositories describe ${{ env.SERVICE }} \
+            --location=${{ env.GAR_LOCATION }} || exit 1
 
       - name: Build and Push Container
         run: |-
@@ -59,7 +63,7 @@ jobs:
             --platform managed \
             --region ${{ env.REGION }} \
             --allow-unauthenticated \
-            --memory 2Gi \
+            --memory 1Gi \
             --cpu 1 \
             --timeout 300 \
             --max-instances 10 \
