@@ -9,7 +9,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GAR_LOCATION: us-central1
-  SERVICE: pill-detection-api
+  SERVICE: yolo12_0901
   REGION: us-central1
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
             --platform managed \
             --region ${{ env.REGION }} \
             --allow-unauthenticated \
-            --memory 2Gi \
+            --memory 1Gi \
             --cpu 1 \
             --timeout 300 \
             --max-instances 10 \

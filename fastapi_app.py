@@ -107,7 +107,7 @@ logger = StructuredLogger(__name__)
 app = FastAPI(
     title="藥丸檢測API",
     description="使用YOLO模型進行藥丸檢測的FastAPI應用",
-    version="2.0.0",
+    version="2.0.1",  # 小版本升級
     docs_url="/docs",
     redoc_url="/redoc"
 )
