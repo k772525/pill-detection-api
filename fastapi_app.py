@@ -12,44 +12,9 @@ import io
 import base64
 from PIL import Image
 import logging
-import yaml
+
 from datetime import datetime
 import uvicorn
-
-# 載入環境變數
-def load_env_from_yaml():
-    """從 env.yaml 載入環境變數"""
-    try:
-        if os.path.exists('env.yaml'):
-            with open('env.yaml', 'r', encoding='utf-8') as f:
-                env_vars = yaml.safe_load(f)
-                for key, value in env_vars.items():
-                    os.environ[key] = str(value)
-                print(f"[調試] 從 env.yaml 載入了 {len(env_vars)} 個環境變數")
-                print(f"[調試] 載入的變數: {list(env_vars.keys())}")
-                
-                # 詳細檢查每個變數
-                for key, value in env_vars.items():
-                    if key == 'DB_PASS':
-                        print(f"[調試] {key}: {'已設定' if value else '未設定'}")
-                    else:
-                        print(f"[調試] {key}: {value}")
-                        
-                # 驗證載入結果
-                print(f"[調試] 驗證環境變數載入:")
-                for key in ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME']:
-                    loaded_value = os.environ.get(key)
-                    print(f"[調試]   {key}: {'✓' if loaded_value else '✗'}")
-                        
-        else:
-            print("[調試] env.yaml 檔案不存在")
-    except Exception as e:
-        print(f"[調試] 載入 env.yaml 失敗: {e}")
-        import traceback
-        traceback.print_exc()
-
-# 在應用啟動時載入環境變數
-load_env_from_yaml()
 
 # 設置結構化日誌
 import json
@@ -323,7 +288,7 @@ async def initialize_models_async():
         if db_pool:
             logger.info("✅ 資料庫連線池初始化成功")
         else:
-            logger.error("❌ 資料庫連線池初始化失敗，請檢查 env.yaml 設定與日誌")
+            logger.error("❌ 資料庫連線池初始化失敗，請檢查環境變數設定與日誌")
         
         # 檢查可用模型
         available_models = get_available_models()
