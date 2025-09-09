@@ -25,7 +25,7 @@
 名稱: CLOUD_SQL_CONNECTION_NAME
 值: your-project-id:us-central1:your-instance-name
 描述: Cloud SQL 連線名稱
-範例: gcp1-462701:us-central1:pill-detection-db
+範例: runson-471605:us-central1:pill-detection-db
 ```
 
 ### ☁️ Google Cloud 相關 Secrets

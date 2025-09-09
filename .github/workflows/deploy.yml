@@ -1,63 +1,76 @@
+# GitHub Actions 工作流程名稱
 name: Deploy to Cloud Run
 
+# 觸發條件：當推送到 main 分支或建立針對 main 分支的 PR 時執行
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # 推送到 main 分支時觸發
   pull_request:
-    branches: [ main ]
+    branches: [ main ]  # 對 main 分支的 PR 時觸發
 
+# 環境變數設定
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAR_LOCATION: us-central1
-  SERVICE: yolo12-0901
-  REGION: us-central1
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}  # GCP 專案 ID（從 GitHub Secrets 讀取）
+  GAR_LOCATION: us-central1                   # Google Artifact Registry 位置
+  SERVICE: yolo12-0909                        # Cloud Run 服務名稱
+  REGION: us-central1                         # 部署區域
 
 jobs:
   deploy:
-    # Add permissions for workload identity federation and GitHub Actions
+    # 為工作負載身份聯合和 GitHub Actions 添加權限
     permissions:
-      contents: read
-      id-token: write
-      actions: read
+      contents: read      # 讀取倉庫內容的權限
+      id-token: write     # 寫入 ID 令牌的權限（用於身份驗證）
+      actions: read       # 讀取 Actions 的權限
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 使用最新版本的 Ubuntu 運行環境
     steps:
+      # 步驟 1: 檢出代碼
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # 下載並檢出倉庫代碼到運行環境
 
+      # 步驟 2: Google Cloud 身份驗證
       - name: Google Auth
         id: auth
-        uses: 'google-github-actions/auth@v2'
+        uses: 'google-github-actions/auth@v2'  # 使用官方 Google 驗證 Action
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'  # 使用服務帳戶金鑰進行驗證
 
+      # 步驟 3: Docker 登入 Google Artifact Registry
       - name: Docker Auth
         id: docker-auth
-        uses: 'docker/login-action@v3'
+        uses: 'docker/login-action@v3'  # 使用官方 Docker 登入 Action
         with:
-          username: _json_key
-          password: ${{ secrets.GCP_SA_KEY }}
-          registry: ${{ env.GAR_LOCATION }}-docker.pkg.dev
+          username: _json_key                                    # GCP 的固定用戶名
+          password: ${{ secrets.GCP_SA_KEY }}                   # 使用服務帳戶金鑰作為密碼
+          registry: ${{ env.GAR_LOCATION }}-docker.pkg.dev      # Artifact Registry 的註冊表 URL
 
+      # 步驟 4: 建立 Artifact Registry 儲存庫
       - name: Create Artifact Registry Repository
         run: |
+          # 嘗試建立 Docker 儲存庫，如果已存在則忽略錯誤
           gcloud artifacts repositories create ${{ env.SERVICE }} \
             --repository-format=docker \
             --location=${{ env.GAR_LOCATION }} \
             --description="Docker repository for ${{ env.SERVICE }}" || echo "Repository may already exist"
           
-          # 驗證儲存庫是否存在
+          # 驗證儲存庫是否存在，確保後續步驟可以正常執行
           gcloud artifacts repositories describe ${{ env.SERVICE }} \
             --location=${{ env.GAR_LOCATION }} || exit 1
 
+      # 步驟 5: 建構並推送 Docker 容器映像
       - name: Build and Push Container
         run: |-
+          # 建構 Docker 映像，使用 Git commit SHA 作為標籤
           docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+          # 推送映像到 Google Artifact Registry
           docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:${{ github.sha }}"
 
+      # 步驟 6: 部署到 Cloud Run
       - name: Deploy to Cloud Run
         id: deploy
         run: |
+          # 部署服務到 Cloud Run，配置各項參數
           gcloud run deploy ${{ env.SERVICE }} \
             --image ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:${{ github.sha }} \
             --platform managed \
@@ -70,14 +83,30 @@ jobs:
             --set-env-vars="PYTHONPATH=/app,GCS_BUCKET_NAME=${{ secrets.GCS_BUCKET_NAME }},DB_HOST=${{ secrets.DB_HOST }},DB_USER=${{ secrets.DB_USER }},DB_PASS=${{ secrets.DB_PASS }},DB_NAME=${{ secrets.DB_NAME }},CLOUD_SQL_CONNECTION_NAME=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}" \
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
             --format json
+          # 配置說明：
+          # - allow-unauthenticated: 允許未驗證的請求（公開存取）
+          # - memory 1Gi: 配置記憶體為 1GB
+          # - cpu 1: 配置 1 個 CPU  
+          # - timeout 300: 請求超時時間為 300 秒
+          # - max-instances 10: 最大實例數為 10
+          # - set-env-vars: 設定環境變數
+          # - add-cloudsql-instances: 連接 Cloud SQL 實例
+          # - format json: 輸出格式為 JSON
 
+      # 步驟 7: 獲取服務 URL 並顯示部署結果
       - name: Get Service URL
         run: |
+          # 獲取已部署服務的 URL
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE }} \
             --platform managed \
             --region ${{ env.REGION }} \
             --format 'value(status.url)')
+          # 顯示部署成功訊息和相關 URL
           echo "Deploy successful!"
           echo "Service URL: $SERVICE_URL"
           echo "API Docs: $SERVICE_URL/docs"
           echo "Health Check: $SERVICE_URL/health"
+          # URL 說明：
+          # - Service URL: 服務主要 URL
+          # - API Docs: FastAPI 自動生成的 API 文檔
+          # - Health Check: 健康檢查端點
